@@ -46,7 +46,7 @@ def process_file(game, json_file):
             if i % 2 == 1: return "assistant"
             else: return "agent"
         elif winner == "black":
-            if i % 2 == 0: return "agent"
+            if i % 2 == 0: return "user"
             else: return "assistant"
     if winner != None:
         moves = []
