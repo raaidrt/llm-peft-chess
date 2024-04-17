@@ -162,3 +162,8 @@ cython_debug/
 # Temp folders
 data/
 wandb/
+
+# Test files
+*.json
+*.pgn
+*.zip
