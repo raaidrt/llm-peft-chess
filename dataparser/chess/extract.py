@@ -44,7 +44,7 @@ def process_file(game, json_file):
     def role_of_index(i):
         if winner == "white":
             if i % 2 == 1: return "assistant"
-            else: return "agent"
+            else: return "user"
         elif winner == "black":
             if i % 2 == 0: return "user"
             else: return "assistant"
