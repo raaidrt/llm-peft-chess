@@ -85,6 +85,8 @@ def main():
     ###############
     # Load datasets
     ###############
+    raw_datasets = get_datasets(data_args, splits=data_args.dataset_splits)
+    print(raw_datasets)
     raw_datasets = get_datasets(
         data_args,
         splits=data_args.dataset_splits,
@@ -130,6 +132,7 @@ def main():
     #####################
     # Apply chat template
     #####################
+    print(raw_datasets["train"][0]["messages"])
     raw_datasets = raw_datasets.map(
         apply_chat_template,
         fn_kwargs={
@@ -145,15 +148,16 @@ def main():
     ##########################
     # Decontaminate benchmarks
     ##########################
-    num_raw_train_samples = len(raw_datasets["train"])
-    raw_datasets = raw_datasets.filter(decontaminate_humaneval, batched=True, batch_size=10_000, num_proc=1)
-    num_filtered_train_samples = num_raw_train_samples - len(raw_datasets["train"])
-    logger.info(
-        f"Decontaminated {num_filtered_train_samples} ({num_filtered_train_samples/num_raw_train_samples * 100:.2f}%) samples from the training set."
-    )
+    # num_raw_train_samples = len(raw_datasets["train"])
+    # raw_datasets = raw_datasets.filter(decontaminate_humaneval, batched=True, batch_size=10_000, num_proc=1)
+    # num_filtered_train_samples = num_raw_train_samples - len(raw_datasets["train"])
+    # logger.info(
+    #     f"Decontaminated {num_filtered_train_samples} ({num_filtered_train_samples/num_raw_train_samples * 100:.2f}%) samples from the training set."
+    # )
 
     train_dataset = raw_datasets["train"]
     eval_dataset = raw_datasets["test"]
+    print(len(raw_datasets["train"]))
 
     with training_args.main_process_first(desc="Log a few random samples from the processed training set"):
         for index in random.sample(range(len(raw_datasets["train"])), 3):
