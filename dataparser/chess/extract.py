@@ -5,6 +5,7 @@ import chess.pgn
 import io
 import json
 from tqdm import tqdm
+from multiprocess import Pool
 
 # Download the dataset
 url = "https://archive.org/download/KingBase2019/KingBase2019-pgn.zip"
@@ -39,35 +40,37 @@ def get_winner(game):
     else:
         return None
 
-def process_file(game, json_file):
-    winner = get_winner(game)
-    def role_of_index(i):
-        if winner == "white":
-            if i % 2 == 1: return "assistant"
-            else: return "agent"
-        elif winner == "black":
-            if i % 2 == 0: return "user"
-            else: return "assistant"
-    if winner != None:
-        moves = []
-        board = chess.Board()
-        for num, move in enumerate(game.mainline_moves(), start=1):
-            moves.append(f"{num}.{board.san(move)}")
-            board.push(move)
-        json_file.write(json.dumps({"messages" : [{"role" : "system", "content" : f"{winner} won the following chess game"}] + \
-                                    [{ "role" : role_of_index(i), "content" : move} for i, move in enumerate(moves)]}, ensure_ascii=False))
-        json_file.write('\n')
+def process_file(file_name):
+    pgn_file = os.path.join(extract_dir, file_name)
+    with open(pgn_file, encoding='latin-1') as pgn:
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        with io.open(f'data/{file_name}.json', 'w', encoding='utf-8') as json_file:
+            while game := chess.pgn.read_game(pgn):
+                winner = get_winner(game)
+                def role_of_index(i):
+                    if winner == "white":
+                        if i % 2 == 1: return "assistant"
+                        else: return "user"
+                    elif winner == "black":
+                        if i % 2 == 0: return "user"
+                        else: return "assistant"
+                if winner != None:
+                    try:
+                        moves = []
+                        board = chess.Board()
+                        for num, move in enumerate(game.mainline_moves(), start=1):
+                            moves.append(f"{num}.{board.san(move)}")
+                            board.push(move)
+                        json_file.write(json.dumps({"messages" : [{"role" : "system", "content" : f"{winner} won the following chess game"}] + \
+                                                    [{ "role" : role_of_index(i), "content" : move} for i, move in enumerate(moves)]}, ensure_ascii=False))
+                        json_file.write('\n')
+                    except Exception as e:
+                        print(f"Error processing game in {pgn_file}: {e}")
+                        continue
 
     
-num_games = 0
-with io.open('chessdata.json', 'w', encoding='utf-8') as json_file:
-    with tqdm(total=total_files, unit="file") as pbar:
-        for file_name in pgn_files:
-            pgn_file = os.path.join(extract_dir, file_name)
-            with open(pgn_file, encoding='latin-1') as pgn:
-                while game := chess.pgn.read_game(pgn):
-                    num_games += 1
-                    process_file(game, json_file)
+with tqdm(total=total_files, unit="file") as pbar:  
+    with Pool(processes=8) as pool:
+        for _ in pool.imap_unordered(process_file, pgn_files):
             pbar.update(1)
-
-print(f"Extracted {num_games} games from the dataset.")
