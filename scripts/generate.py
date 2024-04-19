@@ -83,8 +83,8 @@ with open(DATA, "r") as f:
         prev_responses.append(new_moves)
         print(moveIdx)
         moveIdx += 2
-        if moveIdx >= 10:
-            break
+        # if moveIdx >= 10:
+        #     break
 
     # save prev_responses to a file
     with open(RESULTS, "w") as f:
