@@ -43,6 +43,8 @@ def get_winner(game):
 def process_file(file_name):
     pgn_file = os.path.join(extract_dir, file_name)
     with open(pgn_file, encoding='latin-1') as pgn:
+        if not os.path.exists('data'):
+            os.makedirs('data')
         with io.open(f'data/{file_name}.json', 'w', encoding='utf-8') as json_file:
             while game := chess.pgn.read_game(pgn):
                 winner = get_winner(game)
