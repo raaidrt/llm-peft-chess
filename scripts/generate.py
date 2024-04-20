@@ -3,15 +3,17 @@ from datasets import load_dataset
 from alignment import apply_chat_template
 from tqdm import tqdm
 
-# NAME = "/data/models/Mistral-7B-Instruct-v0.2/"
-NAME = "mistralai/Mistral-7B-v0.1"
+# NAME = "/data/models/Mistral-7B-Instruct-v0.1/"
+NAME = "mistralai/Mistral-7B-v0.2"
 # NAME = "data/qlora-model-name"
 RESULTS = "results/results_temp.json"
 
 DATA = "prompts/prompts_test_sft.json"
 
 tokenizer = AutoTokenizer.from_pretrained(NAME)
-tokenizer.pad_token = tokenizer.eos_token
+tokenizer.pad_token = tokenizer.unk_token
+# tokenizer.padding_side = "right"
+# this should be right I think, but extracting the results is easier with left for some reason
 model = AutoModelForCausalLM.from_pretrained(NAME, device_map="auto")
 
 import re
@@ -32,7 +34,7 @@ def extract_move(response, input_text):
     # extract the move from the response
     # write some regex for this or something
     # find the last instance of "INST" in the response and return the string after it
-    return response[response.rfind("[/INST]")+8:]
+    return response[response.rfind("[/INST]")+7:]
 
 # get first DATA_SIZE games from the test set
 data = []
@@ -75,7 +77,7 @@ while moveIdx < max_moves:
         batch = prefixes[i:i+BATCH_SIZE]
         input = tokenizer(batch, return_tensors="pt", padding=True).to(model.device)
         # figure out what params to use here
-        outputs = model.generate(**input, max_new_tokens=5, do_sample=False, temperature=0.0, top_p=1.0) 
+        outputs = model.generate(**input, max_new_tokens=10, do_sample=False, temperature=0.0, top_p=1.0) 
         # decode the return sequences
         outputs = tokenizer.batch_decode(outputs, skip_special_tokens=False)
 
