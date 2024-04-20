@@ -4,7 +4,7 @@ from alignment import apply_chat_template
 from tqdm import tqdm
 
 # NAME = "/data/models/Mistral-7B-Instruct-v0.2/"
-NAME = "mistralai/Mistral-7B-v0.2"
+NAME = "mistralai/Mistral-7B-v0.1"
 # NAME = "data/qlora-model-name"
 RESULTS = "results/results_temp.json"
 
