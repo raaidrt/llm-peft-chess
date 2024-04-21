@@ -4,9 +4,9 @@ from alignment import apply_chat_template
 from tqdm import tqdm
 
 # NAME = "/data/models/Mistral-7B-Instruct-v0.1/"
-NAME = "mistralai/Mistral-7B-v0.2"
+NAME = "mistralai/Mistral-7B-v0.1"
 # NAME = "data/qlora-model-name"
-RESULTS = "results/results_temp.json"
+RESULTS = "results/results_1024_90.json"
 
 DATA = "prompts/prompts_test_sft.json"
 
@@ -19,9 +19,10 @@ model = AutoModelForCausalLM.from_pretrained(NAME, device_map="auto")
 import re
 import json
 
-BATCH_SIZE = 8
+BATCH_SIZE = 64
 NUM_RETURN_SEQUENCES = 1
-DATA_SIZE = 8 # how many games to generate
+DATA_SIZE = 1024 # how many games to generate
+MAX_MOVES = 90 # stop game after this many moves
 
 def evaluate_move(move, game):
     # evaluate the move
@@ -56,9 +57,13 @@ for line in data:
     full_games.append(messages)
     if len(messages) > max_moves:
         max_moves = len(messages)
+        print(max_moves, messages[-1])
     # messages[0]["content"] = "Play a game of chess. Only use pgn notation in your responses." # custom prompt for base model?
     prefixes.append(messages[:3]) # "User: White won...", "Assistant: Make a move or pass", "User: 1.e4"
     # consider adding more of a prefix when generating from the base model
+
+if max_moves > MAX_MOVES:
+    max_moves = MAX_MOVES
 
 while moveIdx < max_moves:
     new_moves = []
