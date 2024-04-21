@@ -2,7 +2,7 @@
 # each line is a json object
 from tqdm import tqdm
 
-with open("prompts/prompts_test_sft.json", 'r') as f:
+with open('chessdata.json', 'r') as f:
     lines = f.readlines()
     new_lines = []
     with tqdm(total=len(lines), unit="line") as pbar:
