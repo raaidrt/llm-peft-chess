@@ -8,6 +8,7 @@ with open('chessdata.json', 'r') as f:
     new_lines = []
     with tqdm(total=len(lines), unit="line") as pbar:
         for line in tqdm(lines, total = len(lines)):
+            line = line.replace("agent", "user")
             assistant_index = line.index("assistant")
             user_index = line.index("user")
             if assistant_index < user_index:

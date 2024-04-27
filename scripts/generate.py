@@ -4,9 +4,9 @@ from alignment import apply_chat_template
 from tqdm import tqdm
 
 # NAME = "/data/models/Mistral-7B-Instruct-v0.2/"
-NAME = "mistralai/Mistral-7B-v0.1"
-# NAME = "data/qlora-model-name"
-RESULTS = "results/results_temp.json"
+# NAME = "mistralai/Mistral-7B-v0.1"
+NAME = "data/chess-llm"
+RESULTS = "results/results_qlora.json"
 
 DATA = "prompts/prompts_test_sft.json"
 
@@ -32,7 +32,7 @@ def extract_move(response, input_text):
     # extract the move from the response
     # write some regex for this or something
     # find the last instance of "INST" in the response and return the string after it
-    return response[response.rfind("[/INST]")+8:]
+    return response[response.rfind("<|assistant|>")+14:]
 
 # get first DATA_SIZE games from the test set
 data = []
