@@ -5,21 +5,22 @@ from setup_chess_tokenizer import setup_chess_tokenizer, apply_chat_template
 
 # NAME = "/data/models/Mistral-7B-Instruct-v0.2/"
 # NAME = "mistralai/Mistral-7B-v0.1"
-NAME = "data/chess-llm-movesonly"
+NAME = "data/chess-llm-simple"
 RESULTS = "results/results_qlora_new.json"
 
 DATA = "prompts/prompts_test_sft.json"
 
 tokenizer = AutoTokenizer.from_pretrained(NAME)
 model = AutoModelForCausalLM.from_pretrained(NAME, device_map="auto")
+# breakpoint()
 model, tokenizer = setup_chess_tokenizer(model, tokenizer)
 
 import re
 import json
 
-BATCH_SIZE = 1
+BATCH_SIZE = 8
 NUM_RETURN_SEQUENCES = 1
-DATA_SIZE = 1 # how many games to generate
+DATA_SIZE = 8 # how many games to generate
 
 def evaluate_move(move, game):
     # evaluate the move
@@ -31,8 +32,9 @@ def generate_chat(messages):
 def extract_move(response, input_text):
     # extract the move from the response
     # return the string after "|>" and before the last "<|board|>"
-    board_idx = response.rfind("<|board|>")
-    prev_idx = response.rfind("|>", 0, board_idx)
+    # board_idx = response.rfind("<|board|>")
+    board_idx = response.rfind(" [")
+    prev_idx = response.rfind("] ", 0, board_idx)
     return response[prev_idx+2:board_idx]
 
 # get first DATA_SIZE games from the test set
@@ -75,16 +77,16 @@ while moveIdx < max_moves:
         batch = prefixes[i:i+BATCH_SIZE]
         input = tokenizer(batch, return_tensors="pt", padding=True).to(model.device)\
         # figure out what params to use here
-        outputs = model.generate(**input, max_new_tokens=60, do_sample=False) 
-        print(input, outputs[0])
+        outputs = model.generate(**input, max_new_tokens=9, do_sample=False) 
+        # print(input, outputs[0])
         # decode the return sequences
         outputs = tokenizer.batch_decode(outputs, skip_special_tokens=False)
 
-        if i == 0:
-            # print("batch")
-            print("INPUT", batch[0])
-            # print("output")
-            print("OUTPUT", outputs[0])
+        # if i == 0:
+        #     # print("batch")
+        #     print("INPUT", batch[0])
+        #     # print("output")
+        #     print("OUTPUT", outputs[0])
         new_moves_batch = [extract_move(response, text) for response, text in zip(outputs, batch)]
         new_moves.extend(new_moves_batch)
     prev_responses.append(new_moves)

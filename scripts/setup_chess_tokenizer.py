@@ -3,23 +3,23 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 from alignment.data import maybe_insert_system_message, is_openai_format
 
 def setup_chess_tokenizer( model: PreTrainedModel, tokenizer: PreTrainedTokenizer) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
-    tokenizer.add_special_tokens({"additional_special_tokens": ['<|white|>', '<|black|>', '<|board|>']})
-    # set chat format for tokenizer
-    # tokenizer.chat_template = "{% for message in messages %}\n{% if message['role'] == 'system' %}\n{{ message['content'] + eos_token }}\n{% elif message['role'] == 'user' %}\n{{ '<|white|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|black|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|' + add_generation_prompt + '|>' }}\n{% endif %}\n{% endfor %}"
-    tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'system' %}{{ message['content'] + eos_token }}{% elif message['role'] == 'user' %}{{ '<|white|> ' + message['content'] }}{% elif message['role'] == 'assistant' %}{{ '<|black|> ' + message['content'] }}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|' + add_generation_prompt + '|>' }}{% endif %}{% endfor %}"
-    tokenizer.padding_side = "left"
-    # resize embedding layer to a multiple of 64, https://x.com/karpathy/status/1621578354024677377
-    # pad_to_multiple_of=64
-    model.resize_token_embeddings(
-        len(tokenizer), pad_to_multiple_of=None
-    )
-    # Update the model config to use the new eos & bos tokens
-    if getattr(model, "config", None) is not None:
-        model.config.pad_token_id = tokenizer.unk_token
-    # Update the generation config to use the new eos & bos token
-    if getattr(model, "generation_config", None) is not None:
-        # model.generation_config.pad_token_id = tokenizer.unk_token
-        model.generation_config.additional_special_tokens = tokenizer.additional_special_tokens
+    # tokenizer.add_special_tokens({"additional_special_tokens": ['<|white|>', '<|black|>', '<|board|>']})
+    # # set chat format for tokenizer
+    # # tokenizer.chat_template = "{% for message in messages %}\n{% if message['role'] == 'system' %}\n{{ message['content'] + eos_token }}\n{% elif message['role'] == 'user' %}\n{{ '<|white|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|black|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|' + add_generation_prompt + '|>' }}\n{% endif %}\n{% endfor %}"
+    # tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'system' %}{{ message['content'] + eos_token }}{% elif message['role'] == 'user' %}{{ '<|white|> ' + message['content'] }}{% elif message['role'] == 'assistant' %}{{ '<|black|> ' + message['content'] }}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|' + add_generation_prompt + '|>' }}{% endif %}{% endfor %}"
+    # tokenizer.padding_side = "left"
+    # # resize embedding layer to a multiple of 64, https://x.com/karpathy/status/1621578354024677377
+    # # pad_to_multiple_of=64
+    # model.resize_token_embeddings(
+    #     len(tokenizer), pad_to_multiple_of=None
+    # )
+    # # Update the model config to use the new eos & bos tokens
+    # if getattr(model, "config", None) is not None:
+    #     model.config.pad_token_id = tokenizer.unk_token
+    # # Update the generation config to use the new eos & bos token
+    # if getattr(model, "generation_config", None) is not None:
+    #     # model.generation_config.pad_token_id = tokenizer.unk_token
+    #     model.generation_config.additional_special_tokens = tokenizer.additional_special_tokens
 
     return model, tokenizer
 

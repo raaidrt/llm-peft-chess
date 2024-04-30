@@ -23,7 +23,8 @@ lora_target_modules:
 # Data training arguments
 # chat_template: "{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'system' %}\n{{ '<|system|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}"
 # chat_template: "{% for message in messages %}\n{% if message['role'] == 'system' %}\n{{ message['content'] + eos_token }}\n{% elif message['role'] == 'user' %}\n{{ '<|white|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|black|> ' + message['content'] + ' <|board|> ' + message['fen'] }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|' + add_generation_prompt + '|>' }}\n{% endif %}\n{% endfor %}"
-chat_template: "{% for message in messages %}{% if message['role'] == 'system' %}{{ message['content'] + eos_token }}{% elif message['role'] == 'user' %}{{ '<|white|> ' + message['content'] }}{% elif message['role'] == 'assistant' %}{{ '<|black|> ' + message['content'] }}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|' + add_generation_prompt + '|>' }}{% endif %}{% endfor %}"
+# chat_template: "{% for message in messages %}{% if message['role'] == 'system' %}{{ message['content'] + eos_token }}{% elif message['role'] == 'user' %}{{ '<|white|> ' + message['content'] }}{% elif message['role'] == 'assistant' %}{{ '<|black|> ' + message['content'] }}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|' + add_generation_prompt + '|>' }}{% endif %}{% endfor %}"
+chat_template: "{% for message in messages %}{% if message['role'] == 'system' %}{{ message['content'] + eos_token }}{% elif message['role'] == 'user' %}{{ ' [white] ' + message['content'] }}{% elif message['role'] == 'assistant' %}{{ ' [black] ' + message['content'] }}{% endif %}{% if loop.last and add_generation_prompt %}{{ ' [' + add_generation_prompt + '] ' }}{% endif %}{% endfor %}"
 dataset_mixer:
   # /home/ubuntu/llm-peft-chess/prompts: 1.0
   /home/mdhamank/testing/final/llm-peft-chess/prompts: 1.0
@@ -50,10 +51,10 @@ lr_scheduler_type: cosine
 max_seq_length: 4096
 max_steps: -1
 num_train_epochs: 3
-output_dir: data/chess-llm-movesonly
+output_dir: data/chess-llm-simple
 overwrite_output_dir: true
 per_device_eval_batch_size: 8
-per_device_train_batch_size: 8
+per_device_train_batch_size: 4
 push_to_hub: false
 report_to:
 - wandb
