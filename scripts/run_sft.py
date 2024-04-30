@@ -41,6 +41,7 @@ from alignment import (
     get_tokenizer,
 )
 from trl import SFTTrainer, setup_chat_format
+from setup_chess_tokenizer import setup_chess_tokenizer
 
 
 logger = logging.getLogger(__name__)
@@ -124,10 +125,15 @@ def main():
 
     model = model_args.model_name_or_path
     # For ChatML we need to add special tokens and resize the embedding layer
-    if "<|im_start|>" in tokenizer.chat_template and "gemma-tokenizer-chatml" not in tokenizer.name_or_path:
-        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
-        model, tokenizer = setup_chat_format(model, tokenizer)
-        model_kwargs = None
+    # if "<|im_start|>" in tokenizer.chat_template and "gemma-tokenizer-chatml" not in tokenizer.name_or_path:
+    #     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
+    #     model, tokenizer = setup_chat_format(model, tokenizer)
+    #     model_kwargs = None
+    
+    # For Chess we need to add special tokens and resize the embedding layer
+    model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
+    model, tokenizer = setup_chess_tokenizer(model, tokenizer)
+    model_kwargs = None
 
     #####################
     # Apply chat template
@@ -175,7 +181,8 @@ def main():
         dataset_text_field="text",
         max_seq_length=training_args.max_seq_length,
         tokenizer=tokenizer,
-        packing=True,
+        # packing=True,
+        packing=False,
         peft_config=get_peft_config(model_args),
         dataset_kwargs=training_args.dataset_kwargs,
     )

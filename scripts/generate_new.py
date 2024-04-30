@@ -1,13 +1,12 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
-from alignment import apply_chat_template
 from tqdm import tqdm
-from setup_chess_tokenizer import setup_chess_tokenizer
+from setup_chess_tokenizer import setup_chess_tokenizer, apply_chat_template
 
 # NAME = "/data/models/Mistral-7B-Instruct-v0.2/"
 # NAME = "mistralai/Mistral-7B-v0.1"
-NAME = "data/chess-llm"
-RESULTS = "results/results_qlora.json"
+NAME = "data/chess-llm-movesonly"
+RESULTS = "results/results_qlora_new.json"
 
 DATA = "prompts/prompts_test_sft.json"
 
@@ -18,9 +17,9 @@ model, tokenizer = setup_chess_tokenizer(model, tokenizer)
 import re
 import json
 
-BATCH_SIZE = 8
+BATCH_SIZE = 1
 NUM_RETURN_SEQUENCES = 1
-DATA_SIZE = 8 # how many games to generate
+DATA_SIZE = 1 # how many games to generate
 
 def evaluate_move(move, game):
     # evaluate the move
@@ -31,9 +30,10 @@ def generate_chat(messages):
 
 def extract_move(response, input_text):
     # extract the move from the response
-    # write some regex for this or something
-    # find the last instance of "INST" in the response and return the string after it
-    return response[response.rfind("<|assistant|>")+14:]
+    # return the string after "|>" and before the last "<|board|>"
+    board_idx = response.rfind("<|board|>")
+    prev_idx = response.rfind("|>", 0, board_idx)
+    return response[prev_idx+2:board_idx]
 
 # get first DATA_SIZE games from the test set
 data = []
@@ -47,7 +47,7 @@ with open(DATA, "r") as f:
 full_games = [] # list of games, each game is a list of messages
 prefixes = [] # list of ongoing games as chat strings
 max_moves = 0
-moveIdx = 3
+moveIdx = 2
 prev_responses = []
 for line in data: 
     game = json.loads(line)
@@ -55,8 +55,7 @@ for line in data:
     full_games.append(messages)
     if len(messages) > max_moves:
         max_moves = len(messages)
-    # messages[0]["content"] = "Play a game of chess. Only use pgn notation in your responses." # custom prompt for base model?
-    prefixes.append(messages[:3]) # "User: White won...", "Assistant: Make a move or pass", "User: 1.e4"
+    prefixes.append(messages[:2]) # "White won...", "<|white|> 1.e4"
     # consider adding more of a prefix when generating from the base model
 
 while moveIdx < max_moves:
@@ -64,32 +63,33 @@ while moveIdx < max_moves:
     for gameIdx, message in enumerate(full_games):
         if len(message) > moveIdx:
             text = generate_chat(message[:moveIdx]) # this resets game to ground truth every move
-            text = apply_chat_template(text, tokenizer, "generation")
+            text = apply_chat_template(text, tokenizer, "chess-generate", bot_side=['black', 'white'][moveIdx % 2])
             text = text["text"]
             prefixes[gameIdx] = text 
             # should be integrating the model's responses into the game, but that requires some good regex
             # something something prev_responses[gameIdx])
         else:
-            prefixes[gameIdx] = apply_chat_template(generate_chat(message), tokenizer, "generation")["text"]
+            prefixes[gameIdx] = apply_chat_template(generate_chat(message), tokenizer, "chess-generate", bot_side=['black', 'white'][moveIdx % 2])["text"]
     # generate the next move for each game
     for i in tqdm(range(0, len(prefixes), BATCH_SIZE)):
         batch = prefixes[i:i+BATCH_SIZE]
-        input = tokenizer(batch, return_tensors="pt", padding=True).to(model.device)
+        input = tokenizer(batch, return_tensors="pt", padding=True).to(model.device)\
         # figure out what params to use here
-        outputs = model.generate(**input, max_new_tokens=5, do_sample=False, temperature=0.0, top_p=1.0) 
+        outputs = model.generate(**input, max_new_tokens=60, do_sample=False) 
+        print(input, outputs[0])
         # decode the return sequences
         outputs = tokenizer.batch_decode(outputs, skip_special_tokens=False)
 
         if i == 0:
             # print("batch")
-            # print(batch[0])
+            print("INPUT", batch[0])
             # print("output")
-            print(outputs[0])
+            print("OUTPUT", outputs[0])
         new_moves_batch = [extract_move(response, text) for response, text in zip(outputs, batch)]
         new_moves.extend(new_moves_batch)
     prev_responses.append(new_moves)
-    print(moveIdx)
-    moveIdx += 2
+    print(moveIdx, ['black', 'white'][moveIdx % 2])
+    moveIdx += 1
     # if moveIdx >= 10:
     #     break
 
