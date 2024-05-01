@@ -33,12 +33,6 @@ else:
 # Extract the games from all the PGN files in the directory
 pgn_files = [file for file in os.listdir(extract_dir) if file.endswith(".pgn")]
 total_files = len(pgn_files)
-games_to_process_per_file = [ process_num_games // total_files ] * total_files
-if sum(games_to_process_per_file) < process_num_games:
-    games_to_process_per_file[-1] += process_num_games - sum(games_to_process_per_file)
-games_to_process_per_file_mapping = { }
-for i, file in enumerate(pgn_files):
-    games_to_process_per_file_mapping[file] = games_to_process_per_file[i]
 
 def get_winner(game):
     result = game.headers["Result"]
@@ -50,10 +44,41 @@ def get_winner(game):
     else:
         return None
 
+def count_games(file_name):
+    pgn_file = os.path.join(extract_dir, file_name)
+    games = set()
+    with open(pgn_file, encoding='latin-1') as pgn:
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        line_i = 0
+        with io.open(f'data/{file_name}.json', 'w', encoding='utf-8') as json_file:
+            while game := chess.pgn.read_game(pgn):
+                if get_winner(game) != None: 
+                    games.add(line_i)
+                line_i += 1
+    return file_name, games
+
+games_mapping = { }
+print("Counting the number of chess games in each file.")
+with tqdm(total=total_files, unit="file") as pbar:  
+    with Pool(processes=8) as pool:
+        for file_name, games in pool.imap_unordered(count_games, pgn_files):
+            games_mapping[file_name] = games
+            pbar.update(1)
+for file_name, games in games_mapping.items(): 
+    print(f"File {file_name} has {len(games)} non-drawing games")
+
+games_to_process_per_file = [ process_num_games // total_files ] * total_files
+if sum(games_to_process_per_file) < process_num_games:
+    games_to_process_per_file[-1] += process_num_games - sum(games_to_process_per_file)
+games_to_process_per_file_mapping = { }
+for i, file in enumerate(pgn_files):
+    games_to_process_per_file_mapping[file] = games_to_process_per_file[i]
+
 def process_file(file_name):
     pgn_file = os.path.join(extract_dir, file_name)
     num_games_to_process = games_to_process_per_file_mapping[file_name]
-    lines = set(random.choices(list(range(num_games_to_process)), k=num_games_to_process))
+    lines = set(random.choices(list(games_mapping[file_name]), k=num_games_to_process))
     # print(lines)
     with open(pgn_file, encoding='latin-1') as pgn:
         if not os.path.exists('data'):
@@ -103,7 +128,7 @@ def process_file(file_name):
                         print(f"Error processing game in {pgn_file}: {e}")
                         continue
 
-    
+print("Writing to the relevant files")
 with tqdm(total=total_files, unit="file") as pbar:  
     with Pool(processes=8) as pool:
         for _ in pool.imap_unordered(process_file, pgn_files):
