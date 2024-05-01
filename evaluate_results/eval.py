@@ -3,6 +3,7 @@ import ast
 import json
 
 import argparse
+import matplotlib.pyplot as plt
 
 def evaluate_result(results_file, test_file):
     results = []
@@ -52,6 +53,9 @@ def evaluate_result(results_file, test_file):
             moves.append(move["content"])
         actual_moves.append(moves)
 
+    total_games_with_moves = [0 for i in range(max(len(game) for game in actual_moves))]
+    total_games_with_valid_moves = [0 for i in range(max(len(game) for game in actual_moves))]
+
     boards = [chess.Board() for _ in range(DATA_SIZE)]
 
     def cleanup_move_for_evaluation(move):
@@ -74,11 +78,37 @@ def evaluate_result(results_file, test_file):
                     board.push_san(cleanup_move_for_evaluation(results[j][i - ACTUAL_MOVES_START_FROM]))
                     board.pop()
                     valid_moves += 1
+                    total_games_with_valid_moves[i - ACTUAL_MOVES_START_FROM] += 1
                 except Exception as e:
                     pass
             total_moves += 1
+            total_games_with_moves[i] += 1
             boards[j].push_san(cleanup_move_for_evaluation(actual_moves[j][i]))
     # print(f"moves in each game f{[len(actual_moves[i]) for i in range(DATA_SIZE)]}")
+    total_num_games = len(actual_moves)
+    TRUNCATE_AT = 150
+    accuracies = [total_games_with_valid_moves[i] / total_games_with_moves[i] for i in range(len(total_games_with_valid_moves))][:TRUNCATE_AT]
+    weights = [total_games_with_moves[i] / total_num_games for i in range(len(total_games_with_moves))][:TRUNCATE_AT]
+    move_numbers = [i+1 for i in range(len(accuracies))][:TRUNCATE_AT]  # Generate move numbers based on the index plus 1
+
+    with plt.style.context('bmh'):
+        plt.figure(figsize=(10, 6))  # Set the figure size (width, height) in inches
+        plt.scatter(move_numbers, accuracies, color='blue', marker='o', alpha=weights)  # Create a scatterplot
+
+        plt.xlabel('Move Number')  # Set the label for the x-axis
+        plt.ylabel('Accuracy')  # Set the label for the y-axis
+        plt.title('Accuracy vs. Move Number')  # Set the title of the plot
+
+        plt.grid(True, alpha=0.5)
+        # Set the x-axis ticks to show every 10th move number
+        xticks = range(0, max(move_numbers)+1, 10)
+        plt.xticks(xticks)
+        plt.xlim([0, max(move_numbers)])
+
+        plt.ylim(0, 1)  # Set the y-axis limits from 0 to 1 (assuming accuracies are between 0 and 1)
+
+        # Save the graph to a specific file
+        plt.savefig(f'graphs/{results_file.split(".")[0].split("/")[-1]}.png', dpi=300)
     print(f"number of moves in {results_file} is {num_moves * 2} in each game")
     print(f"total moves: {total_moves}")
     print(f"valid moves: {valid_moves}")
