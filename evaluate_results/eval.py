@@ -4,6 +4,7 @@ import json
 
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 
 def evaluate_result(results_file, test_file):
     results = []
@@ -109,10 +110,13 @@ def evaluate_result(results_file, test_file):
 
         # Save the graph to a specific file
         plt.savefig(f'graphs/{results_file.split(".")[0].split("/")[-1]}.png', dpi=300)
+
+    weighted_accuracy = np.average(accuracies, weights=weights)
     print(f"number of moves in {results_file} is {num_moves * 2} in each game")
     print(f"total moves: {total_moves}")
     print(f"valid moves: {valid_moves}")
     print(f"valid move accuracy: {valid_moves / (num_moves * DATA_SIZE) * 100:.2f}%")
+    print(f"weighted accuracy: {weighted_accuracy * 100:.2f}%")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
