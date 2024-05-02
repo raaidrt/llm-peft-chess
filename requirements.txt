@@ -1,0 +1,5 @@
+torch==2.2.2
+flash-attn==2.5.2
+chess
+wget
+patool

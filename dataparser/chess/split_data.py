@@ -2,9 +2,9 @@ from tqdm import tqdm
 import random
 
 # SAMPLES = 10000
-SAMPLES = 4437
+# SAMPLES = 4437
 
-with open('chessdata.json', 'r') as f:
+with open('chessdata_large.json', 'r') as f:
     lines = f.readlines()
     new_lines = []
     with tqdm(total=len(lines), unit="line") as pbar:
@@ -21,14 +21,14 @@ with open('chessdata.json', 'r') as f:
             new_lines.append(line)
             pbar.update(1)
     lines = new_lines
-    lines = random.choices(lines, k=SAMPLES)
+    # lines = random.choices(lines, k=SAMPLES)
     num_lines = len(lines)
     num_train = int(num_lines * 0.8)
     train_lines = lines[:num_train]
     test_lines = lines[num_train:]
 
-    with open('prompts/prompts_train_sft.json', 'w') as train_file:
+    with open('prompts_large/prompts_train_sft.json', 'w') as train_file:
         train_file.writelines(train_lines)
-    with open('prompts/prompts_test_sft.json', 'w') as test_file:
+    with open('prompts_large/prompts_test_sft.json', 'w') as test_file:
         test_file.writelines(test_lines)
     

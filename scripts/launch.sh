@@ -1,1 +1,1 @@
-ACCELERATE_LOG_LEVEL=info accelerate launch --config_file recipes/accelerate_configs/multi_gpu.yaml --num_processes=1 scripts/run_sft.py recipes/chess-llm/sft/config_qlora.yaml --load_in_4bit=true
+ACCELERATE_LOG_LEVEL=info accelerate launch --config_file recipes/accelerate_configs/multi_gpu.yaml --num_processes=7 scripts/run_sft.py recipes/chess-llm/sft/config_qlora_large.yaml --load_in_4bit=true
