@@ -9,7 +9,7 @@ Run ``dataparser/chess/extract.py`` and ``dataparser/chess/split_data.py`` to cr
 Edit and run ``scripts/launch.sh`` depending on how many GPUs you have and which sft recipe you want.
 Extract the zip files in the data folder to use the models we fine tuned.
 ## Generating Moves
-Run ``scripts/generate_new.py`` or ``scripts/generate_retry`` to generate only valid moves
+Run ``scripts/generate_new.py`` or ``scripts/generate_retry.py`` to generate only valid moves
 ## Evaluating Results
 Use scripts in ``evaluate_results``
 ## Play a game
