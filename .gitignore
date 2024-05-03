@@ -168,3 +168,4 @@ wandb/
 *.json
 *.pgn
 *.zip
+.DS_Store
