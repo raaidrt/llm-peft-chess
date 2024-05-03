@@ -87,8 +87,8 @@ def evaluate_result(results_file, test_file):
             boards[j].push_san(cleanup_move_for_evaluation(actual_moves[j][i]))
     # print(f"moves in each game f{[len(actual_moves[i]) for i in range(DATA_SIZE)]}")
     total_num_games = len(actual_moves)
-    TRUNCATE_AT = 150
-    accuracies = [total_games_with_valid_moves[i] / total_games_with_moves[i] for i in range(len(total_games_with_valid_moves))][:TRUNCATE_AT]
+    TRUNCATE_AT = 47
+    accuracies = [total_games_with_valid_moves[i] / total_games_with_moves[i] for i in range(min(len(total_games_with_moves), TRUNCATE_AT))]
     weights = [total_games_with_moves[i] / total_num_games for i in range(len(total_games_with_moves))][:TRUNCATE_AT]
     move_numbers = [i+1 for i in range(len(accuracies))][:TRUNCATE_AT]  # Generate move numbers based on the index plus 1
 
